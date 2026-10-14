@@ -1,0 +1,209 @@
+/* Shared motion system — imported once in main.ts.
+   Keep animations GPU-friendly (transform/opacity) and respect reduced motion. */
+
+:root {
+  --dw-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dw-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dw-grad-hero: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%);
+  --dw-grad-warm: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  --dw-grad-calm: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+  --dw-shadow-lift: 0 12px 32px rgba(79, 70, 229, 0.18);
+  --dw-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- entrance ---------- */
+@keyframes dw-fade-up {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dw-pop-in {
+  0% { opacity: 0; transform: scale(0.92); }
+  60% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes dw-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dw-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.dw-fade-up { animation: dw-fade-up 0.5s var(--dw-ease-out) both; }
+.dw-pop-in { animation: dw-pop-in 0.35s var(--dw-ease-spring) both; }
+.dw-fade-in { animation: dw-fade-in 0.4s ease both; }
+
+/* stagger helper — set style="--d: 3" for delay steps */
+.dw-stagger { animation: dw-fade-up 0.5s var(--dw-ease-out) both; animation-delay: calc(var(--d, 0) * 60ms); }
+
+/* Vue TransitionGroup list moves */
+.dw-list-enter-active, .dw-list-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s var(--dw-ease-out);
+}
+.dw-list-enter-from { opacity: 0; transform: translateY(12px) scale(0.98); }
+.dw-list-leave-to { opacity: 0; transform: translateX(24px) scale(0.98); }
+.dw-list-move { transition: transform 0.35s var(--dw-ease-out); }
+
+/* ---------- interactive ---------- */
+.pressable {
+  transition: transform 0.15s ease, box-shadow 0.25s ease, filter 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pressable:hover { transform: translateY(-2px); }
+.pressable:active { transform: translateY(0) scale(0.97); filter: brightness(0.98); }
+
+.lift-on-hover {
+  transition: transform 0.25s var(--dw-ease-out), box-shadow 0.25s ease;
+}
+.lift-on-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--dw-shadow-lift);
+}
+
+/* checkbox / chip pop when toggled */
+@keyframes dw-check-pop {
+  0% { transform: scale(0.7); }
+  55% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.dw-check-pop { animation: dw-check-pop 0.3s var(--dw-ease-spring); }
+
+/* ---------- hero blobs ---------- */
+.dw-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.dw-hero::before,
+.dw-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.35;
+  z-index: -1;
+  pointer-events: none;
+}
+.dw-hero::before {
+  width: 220px; height: 220px;
+  top: -80px; right: -60px;
+  background: radial-gradient(circle, #a78bfa, transparent 70%);
+  animation: dw-drift 9s ease-in-out infinite alternate;
+}
+.dw-hero::after {
+  width: 180px; height: 180px;
+  bottom: -70px; left: -50px;
+  background: radial-gradient(circle, #67e8f9, transparent 70%);
+  animation: dw-drift 11s ease-in-out infinite alternate-reverse;
+}
+@keyframes dw-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-18px, 16px) scale(1.08); }
+}
+
+/* gradient text */
+.dw-gradient-text {
+  background: var(--dw-grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* pulsing glow for "up next" */
+@keyframes dw-glow-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 0 rgba(79, 70, 229, 0.35); }
+  50% { box-shadow: 0 8px 28px rgba(79, 70, 229, 0.22), 0 0 0 8px rgba(79, 70, 229, 0); }
+}
+.dw-glow { animation: dw-glow-pulse 2.6s ease-in-out infinite; }
+
+/* countdown pill */
+.dw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--ion-color-primary);
+}
+.dw-pill .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: dw-blink 1.6s ease-in-out infinite;
+}
+@keyframes dw-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* animated progress shimmer */
+@keyframes dw-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+.dw-shimmer-bar { position: relative; overflow: hidden; }
+.dw-shimmer-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: dw-shimmer 1.8s ease-in-out infinite;
+}
+
+/* button shine sweep */
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; width: 45%;
+  left: -60%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.btn-shine:hover::after { left: 130%; }
+
+/* ---------- confetti ---------- */
+.dw-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dw-confetti span {
+  position: absolute;
+  top: -12px;
+  width: 8px; height: 12px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: dw-fall linear infinite;
+}
+@keyframes dw-fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0.6; }
+}
+
+/* floating empty-state */
+@keyframes dw-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.dw-float { animation: dw-float 3s ease-in-out infinite; }
+
+/* progress ring sweep */
+.dw-ring-fg {
+  transition: stroke-dashoffset 0.8s var(--dw-ease-out);
+}
+
+/* page content subtle entrance */
+ion-content::part(scroll) {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
